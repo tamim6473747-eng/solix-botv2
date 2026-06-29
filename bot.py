@@ -1,10 +1,9 @@
+import asyncio
 import logging
 
-from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
-    ContextTypes,
 )
 
 from config import BOT_TOKEN
@@ -16,23 +15,14 @@ from handlers.search import search_command
 from handlers.token import token_command
 
 logging.basicConfig(
-    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
     level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
 logger = logging.getLogger("Solix")
 
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.exception("Error:", exc_info=context.error)
-
-    if isinstance(update, Update) and update.effective_message:
-        await update.effective_message.reply_text(
-            "❌ Error occurred. Try again later."
-        )
-
-
-def main():
+def build_app():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start_command))
@@ -41,13 +31,26 @@ def main():
     app.add_handler(CommandHandler("search", search_command))
     app.add_handler(CommandHandler("token", token_command))
 
-    app.add_error_handler(error_handler)
+    return app
 
-    logging.info("🚀 Bot starting...")
 
-    app.run_polling(
-        drop_pending_updates=True
-    )
+async def run():
+    app = build_app()
+
+    await app.initialize()
+    await app.start()
+
+    logger.info("🚀 Bot started")
+
+    await app.updater.start_polling(drop_pending_updates=True)
+
+    await app.updater.stop()
+    await app.stop()
+    await app.shutdown()
+
+
+def main():
+    asyncio.run(run())
 
 
 if __name__ == "__main__":
