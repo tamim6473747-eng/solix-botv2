@@ -1,9 +1,7 @@
 import asyncio
 import logging
-import os
 
 from telegram import Update
-from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
     ApplicationBuilder,
@@ -19,6 +17,9 @@ from handlers.trending import trending_command
 from handlers.search import search_command
 from handlers.token import token_command
 
+# -------------------------
+# Logging
+# -------------------------
 logging.basicConfig(
     format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
     level=logging.INFO,
@@ -27,30 +28,33 @@ logging.basicConfig(
 logger = logging.getLogger("Solix")
 
 
+# -------------------------
+# Post Init
+# -------------------------
 async def post_init(application: Application):
     logger.info("===================================")
     logger.info("✅ Solix Telegram Bot Started")
     logger.info("===================================")
 
 
-async def error_handler(
-    update: object,
-    context: ContextTypes.DEFAULT_TYPE,
-):
-    logger.exception(
-        "Unhandled exception:",
-        exc_info=context.error,
-    )
+# -------------------------
+# Error Handler
+# -------------------------
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    logger.exception("Unhandled exception:", exc_info=context.error)
 
     if isinstance(update, Update) and update.effective_message:
         try:
             await update.effective_message.reply_text(
-                "❌ Something went wrong.\nPlease try again later."
+                "❌ Something went wrong. Please try again later."
             )
         except Exception:
             pass
 
 
+# -------------------------
+# Build App
+# -------------------------
 def build_application() -> Application:
     application = (
         ApplicationBuilder()
@@ -59,48 +63,24 @@ def build_application() -> Application:
         .build()
     )
 
-    application.add_handler(
-        CommandHandler(
-            "start",
-            start_command,
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
-            "help",
-            help_command,
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
-            "trending",
-            trending_command,
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
-            "search",
-            search_command,
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
-            "token",
-            token_command,
-        )
-    )
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("trending", trending_command))
+    application.add_handler(CommandHandler("search", search_command))
+    application.add_handler(CommandHandler("token", token_command))
 
     application.add_error_handler(error_handler)
 
     return application
-    async def run_bot():
+
+
+# -------------------------
+# Run Bot (FIXED)
+# -------------------------
+async def run_bot():
     application = build_application()
 
-    logger.info("Starting polling...")
+    logger.info("Starting bot...")
 
     await application.initialize()
     await application.start()
@@ -121,6 +101,9 @@ def build_application() -> Application:
         await application.shutdown()
 
 
+# -------------------------
+# Main Entry
+# -------------------------
 def main():
     try:
         asyncio.run(run_bot())
@@ -132,4 +115,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
