@@ -97,3 +97,39 @@ def build_application() -> Application:
     application.add_error_handler(error_handler)
 
     return application
+    async def run_bot():
+    application = build_application()
+
+    logger.info("Starting polling...")
+
+    await application.initialize()
+    await application.start()
+
+    await application.updater.start_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True,
+    )
+
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    finally:
+        logger.info("Stopping bot...")
+
+        await application.updater.stop()
+        await application.stop()
+        await application.shutdown()
+
+
+def main():
+    try:
+        asyncio.run(run_bot())
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Bot stopped.")
+    except Exception:
+        logger.exception("Fatal error")
+
+
+if __name__ == "__main__":
+    main()
+    
