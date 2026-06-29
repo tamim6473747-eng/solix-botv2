@@ -2,7 +2,6 @@ import logging
 
 from telegram import Update
 from telegram.ext import (
-    Application,
     ApplicationBuilder,
     CommandHandler,
     ContextTypes,
@@ -16,9 +15,6 @@ from handlers.trending import trending_command
 from handlers.search import search_command
 from handlers.token import token_command
 
-# -------------------------
-# Logging
-# -------------------------
 logging.basicConfig(
     format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
     level=logging.INFO,
@@ -27,25 +23,16 @@ logging.basicConfig(
 logger = logging.getLogger("Solix")
 
 
-# -------------------------
-# Error Handler
-# -------------------------
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.exception("Bot error:", exc_info=context.error)
+    logger.exception("Error:", exc_info=context.error)
 
     if isinstance(update, Update) and update.effective_message:
-        try:
-            await update.effective_message.reply_text(
-                "❌ Something went wrong. Try again later."
-            )
-        except Exception:
-            pass
+        await update.effective_message.reply_text(
+            "❌ Error occurred. Try again later."
+        )
 
 
-# -------------------------
-# Build Application
-# -------------------------
-def build_application() -> Application:
+def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start_command))
@@ -56,20 +43,10 @@ def build_application() -> Application:
 
     app.add_error_handler(error_handler)
 
-    return app
+    logging.info("🚀 Bot starting...")
 
-
-# -------------------------
-# MAIN (FIXED - NO ASYNC)
-# -------------------------
-def main():
-    application = build_application()
-
-    logger.info("🚀 Solix Bot starting...")
-
-    application.run_polling(
-        drop_pending_updates=True,
-        allowed_updates=Update.ALL_TYPES,
+    app.run_polling(
+        drop_pending_updates=True
     )
 
 
