@@ -1,6 +1,7 @@
-import asyncio
 import logging
+import asyncio
 
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -40,13 +41,10 @@ async def run():
     await app.initialize()
     await app.start()
 
-    logger.info("🚀 Bot started")
+    logger.info("🚀 Bot running stable...")
 
-    await app.updater.start_polling(drop_pending_updates=True)
-
-    await app.updater.stop()
-    await app.stop()
-    await app.shutdown()
+    # 🔥 KEEP PROCESS ALIVE (IMPORTANT FOR RENDER)
+    await asyncio.Event().wait()
 
 
 def main():
