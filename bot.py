@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from telegram import Update
@@ -29,88 +28,49 @@ logger = logging.getLogger("Solix")
 
 
 # -------------------------
-# Post Init
-# -------------------------
-async def post_init(application: Application):
-    logger.info("===================================")
-    logger.info("✅ Solix Telegram Bot Started")
-    logger.info("===================================")
-
-
-# -------------------------
 # Error Handler
 # -------------------------
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logger.exception("Unhandled exception:", exc_info=context.error)
+    logger.exception("Bot error:", exc_info=context.error)
 
     if isinstance(update, Update) and update.effective_message:
         try:
             await update.effective_message.reply_text(
-                "❌ Something went wrong. Please try again later."
+                "❌ Something went wrong. Try again later."
             )
         except Exception:
             pass
 
 
 # -------------------------
-# Build App
+# Build Application
 # -------------------------
 def build_application() -> Application:
-    application = (
-        ApplicationBuilder()
-        .token(BOT_TOKEN)
-        .post_init(post_init)
-        .build()
-    )
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    application.add_handler(CommandHandler("start", start_command))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("trending", trending_command))
-    application.add_handler(CommandHandler("search", search_command))
-    application.add_handler(CommandHandler("token", token_command))
+    app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("trending", trending_command))
+    app.add_handler(CommandHandler("search", search_command))
+    app.add_handler(CommandHandler("token", token_command))
 
-    application.add_error_handler(error_handler)
+    app.add_error_handler(error_handler)
 
-    return application
+    return app
 
 
 # -------------------------
-# Run Bot (FIXED)
-# -------------------------
-async def run_bot():
-    application = build_application()
-
-    logger.info("Starting bot...")
-
-    await application.initialize()
-    await application.start()
-
-    await application.updater.start_polling(
-        allowed_updates=Update.ALL_TYPES,
-        drop_pending_updates=True,
-    )
-
-    try:
-        while True:
-            await asyncio.sleep(3600)
-    finally:
-        logger.info("Stopping bot...")
-
-        await application.updater.stop()
-        await application.stop()
-        await application.shutdown()
-
-
-# -------------------------
-# Main Entry
+# MAIN (FIXED - NO ASYNC)
 # -------------------------
 def main():
-    try:
-        asyncio.run(run_bot())
-    except (KeyboardInterrupt, SystemExit):
-        logger.info("Bot stopped.")
-    except Exception:
-        logger.exception("Fatal error")
+    application = build_application()
+
+    logger.info("🚀 Solix Bot starting...")
+
+    application.run_polling(
+        drop_pending_updates=True,
+        allowed_updates=Update.ALL_TYPES,
+    )
 
 
 if __name__ == "__main__":
